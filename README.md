@@ -17,6 +17,19 @@ Step V. Run app. From the survey directory, run:
 meteor
 ```
 Step VI. Visit the app at
-```localhost:3000```
-Step VII. Deploy app to example.meteor.com (as long as it's available, it's free)
-```meteor deploy example.meteor.com```
+```
+http://localhost:3000
+```
+Step VII. Now the app should be running, but there are no questions in the questionbank. To get access to the mongo database run the following in a new terminal:
+```
+meteor mongo
+```
+Step VIII. Populate the database with the questions by running this from within the mongo shell:
+```
+load("private/mongo_populate_questions.js")
+```
+Final Step. Deploy app to example.meteor.com (as long as it's available, it's free)
+```
+meteor deploy example.meteor.com
+```
+
