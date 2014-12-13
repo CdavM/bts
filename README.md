@@ -28,6 +28,10 @@ Step VIII. Populate the database with the questions by running this from within 
 ```
 load("private/mongo_populate_questions.js")
 ```
+Step IX. I recommend looking through Meteor and Mongo documentations. We have a questions database, populated with questions and an answers database, where answers get stored. To see all the current answers, run the following from the mongo shell: (note: if it is empty try filling out the survey a couple of times)
+```
+db.answers.find()
+```
 Final Step. Deploy app to example.meteor.com (as long as it's available, it's free)
 ```
 meteor deploy example.meteor.com
