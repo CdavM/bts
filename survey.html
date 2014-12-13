@@ -1,0 +1,54 @@
+<head>
+<title>Survey</title>
+</head>
+<body>
+
+<div class="container">
+<header>
+<h1>Survey of US State Capitals</h1>
+
+<h2>Instructions</h2>
+<p>Please answer the following questions to the best of your knowledge. Any use of outside sources (i.e. books or Internet search engines) is forbidden.</p>
+<br>
+
+</header>
+<p>Please enter your Worker ID. If you do not enter the correct Worker ID we cannot issue a payment.
+</p>
+
+<ul>
+<li class="{{#if submitted}}submit_worker_ID{{/if}}">
+  <form action={{WorkerID}}>
+  MTurk Worker ID: <input type="text" name="worker_ID"><br>
+  <label>Confirm that this is your true Worker ID by checking this box <input type="checkbox" checked="{{submitted}}" name="toggle-checked-ID" /> </label>
+  </form>
+</li>
+</ul>
+<p>Please answer <b>ALL</b> of the following questions to the best of your knowledge.</p>
+<hr>
+<ul>
+<form class = "noselect">
+{{#each questions}}
+{{> question}}
+{{/each}}
+<p>Now click SUBMIT ANSWERS. Make sure to do this only <b>after</b> answering every question</p>
+<input type="button" name = "button" value = "SUBMIT ANSWERS" checked="{{all_answered}}" class="final_submission" />
+
+</form>
+</ul>
+</div>
+
+
+
+</body>
+
+<template name="question">
+
+<li class="{{#if answered}}answered{{/if}}">
+
+<label>TRUE<input type="radio" name = {{question_ID}} value = "TRUE" checked="{{answered}}" class="toggle-checked" /></label>
+
+<label>FALSE<input type="radio" name = {{question_ID}} value = "FALSE" checked="{{answered}}" class="toggle-checked" /></label>
+<span class="text"> {{text}} </span>
+</li>
+
+</template>
