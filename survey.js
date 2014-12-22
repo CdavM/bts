@@ -110,7 +110,7 @@ if (Meteor.isClient) {
 
   'click .answer_submission': function (event) {
     Session.set("answered", true);
-        
+
     num_of_questions = Questions.find().count();
     worker_ID_value = Session.get('worker_ID_value');
 
@@ -128,7 +128,12 @@ if (Meteor.isClient) {
       }
     }
     current_question = Session.get("current_question");
-    
+
+    //check if the user has answered the question already
+    if (answers_value[current_question] != "None"){
+      return;
+    }
+
     if(!(document.getElementsByName(current_question)[0].checked 
         || document.getElementsByName(current_question)[1].checked)){
       alert("You did not answer the question. Please answer the question before submitting your answer.");
@@ -141,6 +146,7 @@ if (Meteor.isClient) {
         answers_value[current_question] = 0;
       } 
     }
+    
 
     time_difference_val = new Date().getTime();
     time_difference_val -= initial_time_val;
