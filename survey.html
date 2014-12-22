@@ -12,26 +12,29 @@
 <br>
 
 </header>
-<p>Please enter your Worker ID. If you do not enter the correct Worker ID we cannot issue a payment.
-</p>
+<p>Please enter your Worker ID. If you do not enter the correct Worker ID we cannot issue a payment.</p>
 
 <ul>
-<li class="{{#if submitted}}submit_worker_ID{{/if}}">
-  <form action={{WorkerID}}>
+<li class="submit_worker_ID">
+  <form action={{WorkerID}} class={{display_worker_form}}>
   MTurk Worker ID: <input type="text" name="worker_ID"><br>
-  <label>Confirm that this is your true Worker ID by checking this box <input type="checkbox" checked="{{submitted}}" name="toggle-checked-ID" /> </label>
+  After ensuring that this is your true Worker ID, begin the experiment by clicking this button <input type="button" checked="{{initialized}}" value="BEGIN" name="begin_experiment" class="begin_experiment" />
   </form>
 </li>
 </ul>
-<p>Please answer <b>ALL</b> of the following questions to the best of your knowledge.</p>
+<p>Questions will appear one by one. You will have {{duration}} seconds to answer every question. A counter is displayed below. Please answer each question to the best of your knowledge.</p>
 <hr>
 <ul>
 <form class = "noselect">
+<p class="timer"> Time remaining: {{time_remaining}} seconds</p>
+<p class="timer"> Your payment so far: {{current_payment}} USD</p>
+{{#if initialized}}
 {{#each questions}}
 {{> question}}
 {{/each}}
-<p>Now click SUBMIT ANSWERS. Make sure to do this only <b>after</b> answering every question</p>
-<input type="button" name = "button" value = "SUBMIT ANSWERS" checked="{{all_answered}}" class="final_submission" />
+{{/if}}
+<p>Now click SUBMIT ANSWER. Make sure to do this only <b>after</b> answering the question</p>
+<input type="button" name = "button" value = "SUBMIT ANSWER" checked="{{all_answered}}" class="answer_submission" />
 
 </form>
 </ul>
@@ -48,7 +51,9 @@
 <label>TRUE<input type="radio" name = {{question_ID}} value = "TRUE" checked="{{answered}}" class="toggle-checked" /></label>
 
 <label>FALSE<input type="radio" name = {{question_ID}} value = "FALSE" checked="{{answered}}" class="toggle-checked" /></label>
-<span class="text"> {{text}} </span>
+
+<span class={{question_background}}> {{text}} </span>
+
 </li>
 
 </template>

@@ -14,4 +14,7 @@ db.questions.remove();
 for (i=0 ; i < Cities.length ; i++){
 db.questions.insert({ text: Cities[i]+" is the capital of "+ States[i] , question_ID: i });
 }
-
+//remove old solutions
+db.solutions.remove();
+//populate with new solutions
+db.solutions.insert({answer1:[0,0,0,1,0]});
