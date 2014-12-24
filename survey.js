@@ -8,6 +8,9 @@ duration = 10000; //ms
 if (Meteor.isClient) {
   // This code only runs on the client
   var initial_time_val = new Date().getTime();
+  Meteor.subscribe("answers"); 
+  Meteor.subscribe("questions"); // get questionbank
+
   Session.set("answered", false);
   Session.set("time_remaining", duration/1000);
   Session.set('duration', duration/1000);
@@ -15,9 +18,7 @@ if (Meteor.isClient) {
   Session.set('payment_sum', 0);
   Session.set('experiment_finished', false);
   Session.set('current_question', 0);
-
-  Meteor.subscribe("answers"); 
-  Meteor.subscribe("questions"); // get questionbank
+  
 
   // disables 'enter' key
   $(document).on("keypress", 'form', function (e) {
@@ -29,7 +30,7 @@ if (Meteor.isClient) {
   });
 
   Handlebars.registerHelper('question_background',function(){
-    if (Session.get("answered") && Session.get("answered") == true){
+    if (Session.equals("answered", true)){
       return "answered";
     } else {
       return "unanswered";
@@ -38,16 +39,20 @@ if (Meteor.isClient) {
   Handlebars.registerHelper('time_remaining', function(){return Session.get("time_remaining");});
   Handlebars.registerHelper('duration', function(){return Session.get('duration');});
   Handlebars.registerHelper('current_payment', function(){return Session.get('current_payment');});
+  Handlebars.registerHelper('num_of_questions', function(){
+    Session.set('num_of_questions', Questions.find().count());
+    return Session.get('num_of_questions');
+  });
 
   Handlebars.registerHelper('display_worker_form', function(){
-    if (Session.get('initialized') && Session.get('initialized')==true ){
+    if (Session.equals('initialized', true)){
       return "invisible";
     } else {
       return "";
     }
   });
   Handlebars.registerHelper('initialized', function(){
-    if (Session.get('initialized') && Session.get('initialized')==true ){
+    if (Session.equals('initialized', true)){
       return true;
     } else {
       return false;
@@ -57,27 +62,39 @@ if (Meteor.isClient) {
   decrease_time = function() {
     curr_time = Session.get("time_remaining");
     if (curr_time <= 0){
-      Meteor.clearInterval(countdown);
+      Meteor.clearInterval(update_client);
     } else {
       Session.set("time_remaining", curr_time-1);
     }
-    
+  }
+
+  countdown = function(to_clear){
+    if (to_clear){
+      Meteor.clearInterval(update_client);
+    }
+    update_client = Meteor.setInterval(decrease_time, 1000);
   }
 
   Template.body.helpers({
-    questions: function() {
+    questions: function() { 
+
       worker_ID_value = document.getElementsByName("worker_ID")[0].value;
       var curr_experiment = Answers.findOne({experiment_id: 1, worker_ID: worker_ID_value});
       if (curr_experiment && (curr_experiment.current_question != Session.get('current_question'))) {
         Session.set("current_question", curr_experiment.current_question);
         Session.set("answered", false);
+
         Session.set("time_remaining", duration/1000);
-      } if (curr_experiment && curr_experiment.experiment_finished == true) {
-        alert("You have finished the experiment. Please return to MTurk and confirm your participation there. Thank you for your help!");
+        countdown(true);
+      } else if (curr_experiment && curr_experiment.experiment_finished == true) {
+        Meteor.setTimeout(function(){alert("You have finished the experiment. Please return to MTurk and confirm your participation there. Thank you for your help!");
+        }, 30);
+        Session.set("time_remaining", 0);
         return;
-      }
+      } else {
         return Questions.find({question_ID: Session.get("current_question")});   
       }
+    }
   });
 
 
@@ -94,24 +111,21 @@ if (Meteor.isClient) {
     if (!curr_exp){
       Meteor.call('initialPost', {worker_ID: worker_ID_value, experiment_id:1, current_question:0, experiment_finished:false});
       console.log("new experiment entry inserted for worker " + worker_ID_value);
-      Meteor.call('beginExperiment', worker_ID_value, function(error, result){
-        if (error){
-          //handle error
-          alert("Sorry, an error occured. Please contact the requestor with this error code: " + error);
-        }
-      });
+      
       Session.set('initialized', true);
       Session.set('worker_ID_value', worker_ID_value);
-      countdown = Meteor.setInterval(decrease_time, 1000);
+      countdown(false);
     } else {
       alert("Our records indicate that you have already participated in the survey. Thank you!");
     }
   },
 
   'click .answer_submission': function (event) {
+//    console.log(event.target);
+    
     Session.set("answered", true);
 
-    num_of_questions = Questions.find().count();
+    num_of_questions = Session.get('num_of_questions');
     worker_ID_value = Session.get('worker_ID_value');
 
     existing_entry = Answers.findOne({worker_ID: worker_ID_value});
@@ -134,19 +148,12 @@ if (Meteor.isClient) {
       return;
     }
 
-    if(!(document.getElementsByName(current_question)[0].checked 
-        || document.getElementsByName(current_question)[1].checked)){
-      alert("You did not answer the question. Please answer the question before submitting your answer.");
-      return;
+    if(event.target.value == "TRUE"){
+    //1 is TRUE, 0 is FALSE
+      answers_value[current_question] = 1;
     } else {
-      if(document.getElementsByName(current_question)[0].checked){
-        //1 is TRUE, 0 is FALSE
-        answers_value[current_question] = 1;
-      } else {
-        answers_value[current_question] = 0;
-      } 
-    }
-    
+      answers_value[current_question] = 0;
+    } 
 
     time_difference_val = new Date().getTime();
     time_difference_val -= initial_time_val;
@@ -172,6 +179,7 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   //This code only executed on the server
+  Kadira.connect('eh5MW5C97zHJup75Z', '5511d144-17a9-489e-af56-551a0d592371');
   Meteor.publish("answers", function(){return Answers.find()});
   Meteor.publish("questions", function(){return Questions.find()});
   Solutions = new Mongo.Collection("solutions");
@@ -180,6 +188,7 @@ if (Meteor.isServer) {
 Meteor.methods({
   initialPost: function(post){
     Answers.insert(post);
+    Meteor.call('beginQuestionScheduler', post.worker_ID, false);
   },
   newPost: function(post) {
     //format time to UTC human readable format
@@ -209,32 +218,42 @@ Meteor.methods({
     Answers.update({worker_ID: post.worker_ID}, {$set: {answer1: post.answer1, payments: post.payments, 
       initial_time: post.initial_time, time_difference: post.time_difference,
        payments: payments_value}}, {upsert: true});
+
+    //clear setInterval
+
+    //call update question again
+    Meteor.call('beginQuestionScheduler', post.worker_ID, true);
     return reward;
   },
 
-  beginExperiment: function(worker_ID_value){
-      //update questions every duration seconds
-    update_question = function(worker_ID_value){
-      curr_experiment = Answers.findOne({experiment_id: 1, worker_ID: worker_ID_value});
-      if (curr_experiment){
-        current_question = curr_experiment.current_question;
-        num_of_questions = Questions.find().count();
+  update_question: function(worker_ID_value){
+    curr_experiment = Answers.findOne({experiment_id: 1, worker_ID: worker_ID_value});
+    if (curr_experiment){
+      current_question = curr_experiment.current_question;
+      num_of_questions = Questions.find().count();
 
-        if (current_question == (num_of_questions - 1) ){
-          Meteor.clearInterval(update);
-          Answers.update({worker_ID:worker_ID_value}, {$set:{experiment_finished: true}}, {upsert: true});
-          console.log("all the questions passed for " + worker_ID_value);
-          return false;
-        } else {
-          next_question = current_question + 1;
-          Answers.update({experiment_id: 1, worker_ID: worker_ID_value}, {$set: {current_question: next_question}});
-          console.log("question for " + worker_ID_value + " changed to " + next_question);
-          return true;
-        }
+      if (current_question == (num_of_questions - 1) ){
+        Meteor.clearInterval(update);
+        Answers.update({worker_ID:worker_ID_value}, {$set:{experiment_finished: true}}, {upsert: true});
+        console.log("all the questions passed for " + worker_ID_value);
+        return false;
+      } else {
+        next_question = current_question + 1;
+        Answers.update({experiment_id: 1, worker_ID: worker_ID_value}, {$set: {current_question: next_question}});
+        console.log("question for " + worker_ID_value + " changed to " + next_question);
+        return true;
       }
     }
+  },
+
+  beginQuestionScheduler: function(worker_ID_value, to_clear){
+      //update questions every duration seconds
+    if (to_clear){
+      Meteor.clearInterval(update);
+      Meteor.call('update_question',worker_ID_value);
+    }
     //argument in setInterval must be a function, remember that function(argument) evaluates to a value
-    update = Meteor.setInterval(function(){update_question(worker_ID_value);}, duration);
+    update = Meteor.setInterval(function(){Meteor.call('update_question',worker_ID_value);}, duration);
     
   }
 })
