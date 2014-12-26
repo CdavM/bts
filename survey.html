@@ -1,8 +1,10 @@
 <head>
 <title>Survey</title>
 </head>
-<body>
 
+
+<template name="experiment">
+<body>
 <div class="container">
 <header>
 <h1>Survey of US State Capitals</h1>
@@ -12,22 +14,16 @@
 <br>
 
 </header>
-<p>Please enter your Worker ID. If you do not enter the correct Worker ID we cannot issue a payment.</p>
 
-<ul>
-<li class="submit_worker_ID">
-  <form action={{WorkerID}} class={{display_worker_form}}>
-  MTurk Worker ID: <input type="text" name="worker_ID"><br>
-  After ensuring that this is your true Worker ID, begin the experiment by clicking this button <input type="button" checked="{{initialized}}" value="BEGIN" name="begin_experiment" class="begin_experiment" />
-  </form>
-</li>
-</ul>
-<p> {{num_of_questions}} questions will appear one by one. You will have {{duration}} seconds to answer every question. A counter is displayed below. Please answer each question to the best of your knowledge.</p>
+{{>instructions}}
+
+<input type="button" checked="{{initialized}}" value="BEGIN" name="begin_experiment" class="begin_experiment" />
+
 <hr>
 <ul>
 <form class = "noselect">
-<p class="timer"> Time remaining: {{time_remaining}} seconds</p>
-<p class="timer"> Your payment so far: {{current_payment}} USD</p>
+<p class="center"> Time remaining: {{time_remaining}} seconds</p>
+<p class="center"> Your payment so far: {{current_payment}} USD</p>
 {{#if initialized}}
 {{#each questions}}
 {{> question}}
@@ -37,19 +33,51 @@
 </form>
 </ul>
 </div>
-
-
 </body>
+</template>
 
 <template name="question">
-
 <li class="{{#if answered}}answered{{/if}}">
-
 <span class={{question_background}}> {{text}} </span>
-
 <input type="button" name = {{question_ID}} value = "TRUE" class="answer_submission" />
 <input type="button" name = {{question_ID}} value = "FALSE" class="answer_submission" />
+</li>
+</template>
 
+<template name="show_worker_ID">
+<body>
+<div class="container">
+<header>
+<h1>Survey of US State Capitals</h1>
+
+<p>Please enter your Worker ID. If you do not enter the correct Worker ID we cannot issue a payment.</p>
+
+<li class="submit_worker_ID">
+  <form action={{WorkerID}}>
+  MTurk Worker ID: <input type="text" name="worker_ID"><br>
+  After ensuring that this is your true Worker ID, proceed to the experiment area by clicking this button 
+  <input type="button" value="PROCEED" id="proceed" />
+  </form>
 </li>
 
+</header>
+</div>
+</body>
+</template>
+
+<template name="instructions">
+<p> {{num_of_questions}} questions will appear one by one. You will have {{duration}} seconds to answer every question. A counter is displayed below. Please answer each question to the best of your knowledge.</p>
+</template>
+
+<template name="end">
+<body>
+<div class="container">
+<header>
+You have finished the experiment. Please return to MTurk and confirm your participation there. Thank you for your help!
+</header>
+<p class = "center">
+Your final payment is {{current_payment}} USD!
+</p>
+</div>
+</body>
 </template>

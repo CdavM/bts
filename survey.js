@@ -5,8 +5,29 @@ Questions = new Mongo.Collection("questions");
 //Experiment = new Mongo.Collection("experiment");
 duration = 10000; //ms
 
+
+
+Router.route('/experiment', function(){
+  if (Session.equals('worker_ID_value', -1)){
+        //if no worker_ID found redirect back to starting page
+    Router.go('/');
+    } else {
+      this.render('experiment');
+    }
+});
+
+Router.route('/', function(){
+  this.render('show_worker_ID');
+});
+
+Router.route('/end', function(){
+  this.render('end');
+});
+
 if (Meteor.isClient) {
   // This code only runs on the client
+  
+
   var initial_time_val = new Date().getTime();
   Meteor.subscribe("answers"); 
   Meteor.subscribe("questions"); // get questionbank
@@ -18,7 +39,7 @@ if (Meteor.isClient) {
   Session.set('payment_sum', 0);
   Session.set('experiment_finished', false);
   Session.set('current_question', 0);
-  
+  Session.set('worker_ID_value', -1);
 
   // disables 'enter' key
   $(document).on("keypress", 'form', function (e) {
@@ -75,10 +96,10 @@ if (Meteor.isClient) {
     update_client = Meteor.setInterval(decrease_time, 1000);
   }
 
-  Template.body.helpers({
-    questions: function() { 
+  Template.experiment.helpers({
+    questions: function() {
 
-      worker_ID_value = document.getElementsByName("worker_ID")[0].value;
+      worker_ID_value = Session.get('worker_ID_value');
       var curr_experiment = Answers.findOne({experiment_id: 1, worker_ID: worker_ID_value});
       if (curr_experiment && (curr_experiment.current_question != Session.get('current_question'))) {
         Session.set("current_question", curr_experiment.current_question);
@@ -87,8 +108,7 @@ if (Meteor.isClient) {
         Session.set("time_remaining", duration/1000);
         countdown(true);
       } else if (curr_experiment && curr_experiment.experiment_finished == true) {
-        Meteor.setTimeout(function(){alert("You have finished the experiment. Please return to MTurk and confirm your participation there. Thank you for your help!");
-        }, 30);
+        Router.go('/end');
         Session.set("time_remaining", 0);
         return;
       } else {
@@ -97,15 +117,24 @@ if (Meteor.isClient) {
     }
   });
 
+  Template.show_worker_ID.events({
+    'click #proceed': function(event) {
+      data = event.target.form[0].value;
+      if (data && data != ""){
+        Session.set('worker_ID_value', data);
+        Router.go('/experiment');
+      } else {
+        alert("Please enter your Worker ID");
+        return;
+      }
+    }
+  });
 
-  Template.body.events({
+  Template.experiment.events({
 
   'click .begin_experiment': function (event) {
-    worker_ID_value = document.getElementsByName("worker_ID")[0].value;
-    if (worker_ID_value == ""){
-      alert("Please enter your Worker ID");
-      return;
-    }
+    worker_ID_value = Session.get("worker_ID_value");
+    
     //find experiment state for the worker
     curr_exp = Answers.findOne({worker_ID: worker_ID_value});
     if (!curr_exp){
@@ -121,7 +150,6 @@ if (Meteor.isClient) {
   },
 
   'click .answer_submission': function (event) {
-//    console.log(event.target);
     
     Session.set("answered", true);
 
@@ -179,11 +207,11 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   //This code only executed on the server
-  Kadira.connect('eh5MW5C97zHJup75Z', '5511d144-17a9-489e-af56-551a0d592371');
+  Kadira.connect('eh5MW5C97zHJup75Z', '5511d144-17a9-489e-af56-551a0d592371'); //performance benchmark
+
   Meteor.publish("answers", function(){return Answers.find()});
   Meteor.publish("questions", function(){return Questions.find()});
   Solutions = new Mongo.Collection("solutions");
-
 
 Meteor.methods({
   initialPost: function(post){
