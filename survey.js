@@ -193,11 +193,10 @@ if (Meteor.isClient) {
       } else {
         // examine result
         Session.set('payment_sum', Session.get('payment_sum') + result);
-        current_payment = Session.get('payment_sum')/(current_question+1)
+        current_payment = Session.get('payment_sum')/(current_question+1);
         Session.set('current_payment', Math.round(current_payment*1000)/1000);
         //process average payment
         console.log("payment for the current question is "+ result);
-                
       }
     });
     
@@ -263,7 +262,7 @@ Meteor.methods({
       if (current_question == (num_of_questions - 1) ){
         Meteor.clearInterval(update);
         Answers.update({worker_ID:worker_ID_value}, {$set:{experiment_finished: true}}, {upsert: true});
-        console.log("all the questions passed for " + worker_ID_value);
+        Meteor.setTimeout(function(){console.log("all the questions passed for " + worker_ID_value);},30);
         return false;
       } else {
         next_question = current_question + 1;
