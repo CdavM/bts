@@ -63,6 +63,10 @@ if (Meteor.isClient) {
     return Session.get('num_of_questions');
   });
 
+  Handlebars.registerHelper('show_payment_system', function(){
+    return false; //show the user their current payment
+  });
+
   Handlebars.registerHelper('initialized', function(){
     if (Session.equals('initialized', true)){
       return true;
@@ -133,7 +137,7 @@ if (Meteor.isClient) {
 
   Template.experiment.events({
 
-  'click .begin_experiment': function (event) {
+  'click #begin_experiment': function (event) {
     worker_ID_value = Session.get("worker_ID_value");
     Meteor.call('initialPost', {worker_ID: worker_ID_value});
     console.log("new experiment entry inserted for worker " + worker_ID_value);
@@ -142,6 +146,15 @@ if (Meteor.isClient) {
   },
 
   'click .answer_submission': function (event) {
+
+    percentage_value = event.target.form[0].value;
+    console.log("percentage_value is "+percentage_value);
+    if (!(percentage_value) || percentage_value<0 || percentage_value > 100 ||
+         typeof Number(percentage_value) != 'number' || percentage_value % 1 != 0){
+      alert("Please enter a percentage - a number between 0 and 100. No decimals.");
+      return;
+    }
+
 
     Session.set("answered", true);
 
@@ -158,7 +171,7 @@ if (Meteor.isClient) {
     time_difference_val = new Date().getTime();
     time_difference_val -= initial_time_val;
 
-    Meteor.call('newPost', {answer: answer_value, worker_ID: worker_ID_value, initial_time: initial_time_val,
+    Meteor.call('newPost', {answer: answer_value, percentage: percentage_value, worker_ID: worker_ID_value, initial_time: initial_time_val,
      time_difference: time_difference_val}, function (error, result) {
       if (error) {
         // handle error
@@ -174,7 +187,7 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   //This code only executed on the server
-  Kadira.connect('eh5MW5C97zHJup75Z', '5511d144-17a9-489e-af56-551a0d592371'); //performance benchmark
+  //Kadira.connect('eh5MW5C97zHJup75Z', '5511d144-17a9-489e-af56-551a0d592371'); //performance benchmark
 
   //TODO: User only needs access to his own answers, reduce traffic by only publishing his own
   Meteor.publish("answers", function(){return Answers.find()});
@@ -246,8 +259,27 @@ Meteor.methods({
       return;
     }
     answers_value[current_question] = post.answer;
+
+    //process the percentage value
+    percentages_value = [];
+    
+    if (existing_entry.percentages){
+      //worker has submitted some answers, retrieve them
+      percentages_value = existing_entry.percentages;
+    } else {
+      //no answers submitted yet, construct empty array
+      for (i = 0; i < num_of_questions; i++) {
+        percentages_value[percentages_value.length] = -1;
+      }
+    }
+
+    //check if the user has answered the question already
+    if (percentages_value[current_question] != -1){
+      return;
+    }
+    percentages_value[current_question] = post.percentage;    
     //Add entry to Answers
-    Answers.update({worker_ID: post.worker_ID}, {$set: {answer1: answers_value, 
+    Answers.update({worker_ID: post.worker_ID}, {$set: {answer1: answers_value, percentages: percentages_value,
       initial_time: post.initial_time, time_difference: post.time_difference}}, {upsert: true});
 
     //call update question again
@@ -259,7 +291,9 @@ Meteor.methods({
     if (curr_experiment){
       current_question = curr_experiment.current_question;
       num_of_questions = Questions.find().count();
-      Meteor.call('payment', curr_experiment);
+      if (curr_experiment.answer1){
+        Meteor.call('payment', curr_experiment);
+      }
       if (current_question == (num_of_questions - 1) ){
         Meteor.clearInterval(update);
         Answers.update({worker_ID:worker_ID_value}, {$set:{experiment_finished: true}}, {upsert: true});

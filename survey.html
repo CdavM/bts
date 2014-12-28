@@ -17,13 +17,16 @@
 
 {{>instructions}}
 
-<input type="button" checked="{{initialized}}" value="BEGIN" name="begin_experiment" class="begin_experiment" />
+<p class="center"><input type="button" checked="{{initialized}}" value="BEGIN" name="begin_experiment" id="begin_experiment" /></p>
 
 <hr>
 <ul>
 <form class = "noselect">
 <p class="center"> Time remaining: {{time_remaining}} seconds</p>
-<p class="center"> Your payment so far: {{current_payment}} USD</p>
+{{#if show_payment_system}}
+{{>payment_system}}
+{{/if}}
+
 {{#if initialized}}
 {{#each questions}}
 {{> question}}
@@ -39,7 +42,9 @@
 <template name="question">
 <li class="{{#if answered}}answered{{/if}}">
 <span class={{question_background}}> {{text}} </span>
-<input type="button" name = {{question_ID}} value = "TRUE" class="answer_submission" />
+<br>
+Percentage: <input type="text" name="prediction">%
+<input type="button" id = '0' name = {{question_ID}} value = "TRUE" class="answer_submission" />
 <input type="button" name = {{question_ID}} value = "FALSE" class="answer_submission" />
 </li>
 </template>
@@ -66,7 +71,12 @@
 </template>
 
 <template name="instructions">
-<p> {{num_of_questions}} questions will appear one by one. You will have {{duration}} seconds to answer every question. A counter is displayed below. Please answer each question to the best of your knowledge.</p>
+<p> {{num_of_questions}} questions will appear one by one. You will have {{duration}} seconds to answer every question. A counter is displayed below. Here are your detailed instructions for every question:</p>
+<ol>
+	<li>1. To the best of your knowledge, decide whether you believe the question is true. Do not click anything yet</li>
+	<li>2. Enter the percentage (a number without decimals between 0 and 100) of other users who you estimate to share your belief (i.e. if you believe the answer is 'true', how many others will also pick the answer 'true'?)</li>
+	<li>3. Click the answer you believe is right</li>
+</ol>
 </template>
 
 <template name="end">
@@ -75,9 +85,21 @@
 <header>
 You have finished the experiment. Please return to MTurk and confirm your participation there. Thank you for your help!
 </header>
+
+{{#if show_payment_system}}
+{{>show_final_payment}}
+{{/if}}
+
+</div>
+</body>
+</template>
+
+<template name="payment_system">
+<p class="center"> Your payment so far: {{current_payment}} USD</p>
+</template>
+
+<template name="show_final_payment">
 <p class = "center">
 Your final payment is {{current_payment}} USD!
 </p>
-</div>
-</body>
 </template>

@@ -4,15 +4,15 @@ load("private/mongo_populate_questions.js")
 */
 //Populate local arrays
 
-var Cities = ["Los Angeles", "Portland", "Seattle", "Honolulu", "Birmingham"];
-var States = ["California", "Oregon", "Washington", "Hawaii", "Alabama"];
+Cities = ["Los Angeles", "Portland", "Seattle", "Honolulu", "Birmingham"];
+States = ["California", "Oregon", "Washington", "Hawaii", "Alabama"];
 
 //remove old questions
 db.questions.remove();
 
 //populate with new questions
 for (i=0 ; i < Cities.length ; i++){
-db.questions.insert({ text: Cities[i]+" is the capital of "+ States[i] , question_ID: i });
+	db.questions.insert({ text: Cities[i]+" is the capital of "+ States[i] , question_ID: i });
 }
 //remove old solutions
 db.solutions.remove();
