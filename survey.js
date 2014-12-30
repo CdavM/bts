@@ -145,8 +145,23 @@ if (Meteor.isClient) {
     countdown(false);
   },
 
-  'click .answer_submission': function (event) {
+  'click .example_submission': function(event){
+    percentage_value = event.target.form[0].value;
+    if (!(percentage_value) || percentage_value<0 || percentage_value > 100 ||
+         typeof Number(percentage_value) != 'number' || percentage_value % 1 != 0){
+      alert("Please enter a percentage - a number between 0 and 100. No decimals.");
+      return;
+    } else if (percentage_value != 74) {
+      alert("Please make sure to enter the correct value, as specified in the instructions (74)");
+    } else if (event.target.value === "FALSE") {
+      alert("Please click the button which is specified in the instructions (True)");
+    } else {
+      alert("You completed the example correctly. Click the 'Begin' button above to begin the experiment!");
+    }
 
+  },
+
+  'click .answer_submission': function (event) {
     percentage_value = event.target.form[0].value;
     console.log("percentage_value is "+percentage_value);
     if (!(percentage_value) || percentage_value<0 || percentage_value > 100 ||
@@ -154,12 +169,8 @@ if (Meteor.isClient) {
       alert("Please enter a percentage - a number between 0 and 100. No decimals.");
       return;
     }
-
-
     Session.set("answered", true);
-
     worker_ID_value = Session.get('worker_ID_value');
-    
     answer_value = -1;
     if(event.target.value == "TRUE"){
     //1 is TRUE, 0 is FALSE
@@ -193,6 +204,7 @@ if (Meteor.isServer) {
   Meteor.publish("answers", function(){return Answers.find()});
   Meteor.publish("questions", function(){return Questions.find()});
   Solutions = new Mongo.Collection("solutions");
+  intervals = {};
 
 Meteor.methods({
   initialPost: function(post){
@@ -286,34 +298,46 @@ Meteor.methods({
     Meteor.call('beginQuestionScheduler', post.worker_ID, true);
   },
 
-  update_question: function(worker_ID_value){
-    curr_experiment = Answers.findOne({experiment_id: 1, worker_ID: worker_ID_value});
+  
+  beginQuestionScheduler: function(worker_ID_value, to_clear){
+      //update questions every duration seconds
+    
+    if (to_clear){
+      update_question(worker_ID_value);
+      Meteor.clearInterval(intervals[worker_ID_value]);
+      intervals[worker_ID_value]=0;
+    }
+    
+    update_question = function(worker_ID_value){
+    curr_experiment = Answers.findOne({worker_ID: worker_ID_value});
     if (curr_experiment){
       current_question = curr_experiment.current_question;
       num_of_questions = Questions.find().count();
       if (curr_experiment.answer1){
         Meteor.call('payment', curr_experiment);
       }
-      if (current_question == (num_of_questions - 1) ){
-        Meteor.clearInterval(update);
+
+      if (current_question === (num_of_questions - 1) ){
+        Meteor.clearInterval(intervals[worker_ID_value]);
+        intervals[worker_ID_value]=0;
+
         Answers.update({worker_ID:worker_ID_value}, {$set:{experiment_finished: true}}, {upsert: true});
         Meteor.setTimeout(function(){console.log("all the questions passed for " + worker_ID_value);},30);
       } else {
         next_question = current_question + 1;
         Answers.update({experiment_id: 1, worker_ID: worker_ID_value}, {$set: {current_question: next_question}});
         console.log("question for " + worker_ID_value + " changed to " + next_question);
+        
       }
     }
-  },
-
-  beginQuestionScheduler: function(worker_ID_value, to_clear){
-      //update questions every duration seconds
-    if (to_clear){
-      Meteor.clearInterval(update);
-      Meteor.call('update_question',worker_ID_value);
     }
-    //argument in setInterval must be a function, remember that function(argument) evaluates to a value
-    update = Meteor.setInterval(function(){Meteor.call('update_question',worker_ID_value);}, duration);
+
+    if (intervals[worker_ID_value]){
+      Meteor.clearInterval(intervals[worker_ID_value]);
+      intervals[worker_ID_value]=0;
+    } else {
+      intervals[worker_ID_value] = Meteor.setInterval(function(){update_question(worker_ID_value);}, duration);
+    }
     
   }
 })

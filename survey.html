@@ -10,7 +10,7 @@
 <h1>Survey of US State Capitals</h1>
 
 <h2>Instructions</h2>
-<p>Please answer the following questions to the best of your knowledge. Any use of outside sources (i.e. books or Internet search engines) is forbidden.</p>
+<p>Please answer the following questions to the best of your knowledge. Any use of outside sources (i.e. books or Internet search engines) is forbidden. </p>
 <br>
 
 </header>
@@ -31,6 +31,8 @@
 {{#each questions}}
 {{> question}}
 {{/each}}
+{{else}}
+{{>example_question}}
 {{/if}}
 
 </form>
@@ -74,9 +76,10 @@ Percentage: <input type="text" name="prediction">%
 <p> {{num_of_questions}} questions will appear one by one. You will have {{duration}} seconds to answer every question. A counter is displayed below. Here are your detailed instructions for every question:</p>
 <ol>
 	<li>1. To the best of your knowledge, decide whether you believe the question is true. Do not click anything yet</li>
-	<li>2. Enter the percentage (a number without decimals between 0 and 100) of other users who you estimate to share your belief (i.e. if you believe the answer is 'true', how many others will also pick the answer 'true'?)</li>
+	<li>2. Enter the percentage (a number without decimals between 0 and 100) of other users whom you estimate to share your belief (i.e. if you believe the answer is 'true', how many others will also pick the answer 'true'?)</li>
 	<li>3. Click the answer you believe is right</li>
 </ol>
+<p>Once you're ready, press the button below to begin the experiment</p>
 </template>
 
 <template name="end">
@@ -102,4 +105,16 @@ You have finished the experiment. Please return to MTurk and confirm your partic
 <p class = "center">
 Your final payment is {{current_payment}} USD!
 </p>
+</template>
+
+<template name="example_question">
+To make sure you understand the instructions, please fill out the following example. Enter 74 into the percentage field and press 'TRUE'.
+
+<li>
+<span> Washington, DC is the capital of USA. </span>
+<br>
+Percentage: <input type="text" name="example_prediction">%
+<input type="button" value = "TRUE" class="example_submission" />
+<input type="button" value = "FALSE" class="example_submission" />
+</li>
 </template>
