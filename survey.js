@@ -1,11 +1,6 @@
-// rsync -az /media/coding/survey/ survey/
-
 Answers = new Mongo.Collection("answers");
 Questions = new Mongo.Collection("questions");
-//Experiment = new Mongo.Collection("experiment");
 duration = 10000; //ms
-
-
 
 Router.route('/experiment', function(){
   if (Session.equals('worker_ID_value', -1)){
@@ -38,6 +33,7 @@ if (Meteor.isClient) {
   Session.set('experiment_finished', false);
   Session.set('current_question', 0);
   Session.set('worker_ID_value', -1);
+  initialized_questions = true;
 
   // disables 'enter' key
   $(document).on("keypress", 'form', function (e) {
@@ -64,7 +60,7 @@ if (Meteor.isClient) {
   });
 
   Handlebars.registerHelper('show_payment_system', function(){
-    return false; //show the user their current payment
+    return true; //show the user their current payment
   });
 
   Handlebars.registerHelper('initialized', function(){
@@ -72,6 +68,16 @@ if (Meteor.isClient) {
       return true;
     } else {
       return false;
+    }
+  });
+  //reactively starts the experiment
+  Deps.autorun(function(){
+    var curr_experiment = Answers.findOne({worker_ID: Session.get('worker_ID_value')});
+    if (initialized_questions && curr_experiment && curr_experiment.begin_experiment){
+      console.log("new experiment entry inserted for worker " + worker_ID_value);
+      Session.set('initialized', true);
+      countdown(false);
+      initialized_questions = false;
     }
   });
 
@@ -95,7 +101,8 @@ if (Meteor.isClient) {
     questions: function() {
 
       worker_ID_value = Session.get('worker_ID_value');
-      var curr_experiment = Answers.findOne({experiment_id: 1, worker_ID: worker_ID_value});
+      var curr_experiment = Answers.findOne({worker_ID: worker_ID_value});
+
       if (curr_experiment){
         //update average payment
         current_payment = curr_experiment.avg_payment;
@@ -140,9 +147,7 @@ if (Meteor.isClient) {
   'click #begin_experiment': function (event) {
     worker_ID_value = Session.get("worker_ID_value");
     Meteor.call('initialPost', {worker_ID: worker_ID_value});
-    console.log("new experiment entry inserted for worker " + worker_ID_value);
-    Session.set('initialized', true);
-    countdown(false);
+    
   },
 
   'click .example_submission': function(event){
@@ -163,7 +168,6 @@ if (Meteor.isClient) {
 
   'click .answer_submission': function (event) {
     percentage_value = event.target.form[0].value;
-    console.log("percentage_value is "+percentage_value);
     if (!(percentage_value) || percentage_value<0 || percentage_value > 100 ||
          typeof Number(percentage_value) != 'number' || percentage_value % 1 != 0){
       alert("Please enter a percentage - a number between 0 and 100. No decimals.");
@@ -205,22 +209,63 @@ if (Meteor.isServer) {
   Meteor.publish("questions", function(){return Questions.find()});
   Solutions = new Mongo.Collection("solutions");
   intervals = {};
+  counters = {};
+  threshold = 2; //we need at least threshold users in every experiment
+  experiment_id_counter = 1;
 
 Meteor.methods({
   initialPost: function(post){
     //never trust the client
-    Answers.insert({worker_ID: post.worker_ID, experiment_id:1, current_question:0,
+
+    //check if already present
+    if (Answers.findOne({worker_ID: post.worker_ID})){
+      return;
+    }
+
+    experiment_id_value = experiment_id_counter;
+
+    Answers.insert({worker_ID: post.worker_ID, experiment_id: experiment_id_value, current_question:0,
                   avg_payment:0, experiment_finished:false});
-    Meteor.call('beginQuestionScheduler', post.worker_ID, false);
+
+    if (counters[experiment_id_value]){
+      counters[experiment_id_value]['initial_counter']++;
+    } else {
+      counters[experiment_id_value]={};
+      counters[experiment_id_value]['initial_counter']=1;
+      counters[experiment_id_value]['initial_timer']=true;
+      //set timeout, also cancel a flag
+      Meteor.setTimeout(function(){
+        if (counters[experiment_id_value]['initial_timer']){
+          experiment_id_counter++;
+          var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
+          entries.forEach(function(post){
+            console.log(post.worker_ID);
+            Answers.update({worker_ID: post.worker_ID}, {$set:{begin_experiment: true}}, {upsert:true});
+            Meteor.call('beginQuestionScheduler', post.worker_ID, false);
+          });
+        counters[experiment_id_value]['initial_timer'] = false;  
+        }  
+      }, 12000); 
+    }
+    
+    if (counters[experiment_id_value]['initial_timer'] && counters[experiment_id_value]['initial_counter'] >= threshold){ //call this when we get two entries
+      experiment_id_counter++;
+      var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
+      entries.forEach(function(post){
+        console.log(post.worker_ID);
+        Answers.update({worker_ID: post.worker_ID}, {$set:{begin_experiment: true}}, {upsert:true});
+        Meteor.call('beginQuestionScheduler', post.worker_ID, false);
+      });
+      counters[experiment_id_value]['initial_timer']=false;
+    }
   },
   payment: function(existing_entry){
-    current_question = existing_entry.current_question;
-    current_answer = existing_entry.answer1[current_question];
-
+    experiment_id_value = existing_entry.experiment_id;
     num_of_questions = Questions.find().count();
+    current_question = existing_entry.current_question;
     //TODO: improve Solutions db mgmt
-    solution_answer = Solutions.findOne().answer1[current_question];
-
+    var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
+    var solution_answer = Solutions.findOne().answer1[current_question];
     payments_value = [];
     existing_payments = existing_entry.payments;
     if (existing_payments){
@@ -233,13 +278,18 @@ Meteor.methods({
     }
 
     reward = 0;
-    if (current_answer == solution_answer){
-      reward = 1;
-    } else if (current_answer == -1) {
-      reward = 0; //didn't answer
-    } else {
-      reward = 0.3;
-    }
+    entries.forEach(function(post){
+      if (post.worker_ID != existing_entry.worker_ID){
+        if (!post.answer1 || post.answer1[current_question] == -1){
+          reward = 0;
+        } else if (post.answer1[current_question] == solution_answer){
+          reward = 1;
+        } else {
+          reward = 0.3;
+        }
+      }
+    });
+
     payments_value[current_question] = reward;
     avg_payment_value = (existing_entry.avg_payment*current_question+payments_value[current_question])/(current_question+1);  
     avg_payment_value = Math.round(avg_payment_value*1000)/1000;
@@ -254,7 +304,8 @@ Meteor.methods({
 
     existing_entry = Answers.findOne({worker_ID: post.worker_ID});
     answers_value = [];
-    
+    var experiment_id_value = existing_entry.experiment_id;
+
     if (existing_entry.answer1){
       //worker has submitted some answers, retrieve them
       answers_value = existing_entry.answer1;
@@ -294,8 +345,19 @@ Meteor.methods({
     Answers.update({worker_ID: post.worker_ID}, {$set: {answer1: answers_value, percentages: percentages_value,
       initial_time: post.initial_time, time_difference: post.time_difference}}, {upsert: true});
 
-    //call update question again
-    Meteor.call('beginQuestionScheduler', post.worker_ID, true);
+    //update question when we get ALL the answers
+
+    if (counters[experiment_id_value][current_question]){
+      counters[experiment_id_value][current_question]++;
+    } else {
+      counters[experiment_id_value][current_question]=1;
+    }
+    if (counters[experiment_id_value][current_question] >= threshold){
+      var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
+      entries.forEach(function(post){
+        Meteor.call('beginQuestionScheduler', post.worker_ID, true);
+      });
+    }
   },
 
   
@@ -325,7 +387,7 @@ Meteor.methods({
         Meteor.setTimeout(function(){console.log("all the questions passed for " + worker_ID_value);},30);
       } else {
         next_question = current_question + 1;
-        Answers.update({experiment_id: 1, worker_ID: worker_ID_value}, {$set: {current_question: next_question}});
+        Answers.update({worker_ID: worker_ID_value}, {$set: {current_question: next_question}});
         console.log("question for " + worker_ID_value + " changed to " + next_question);
         
       }
