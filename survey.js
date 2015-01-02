@@ -263,8 +263,11 @@ Meteor.methods({
     experiment_id_value = existing_entry.experiment_id;
     num_of_questions = Questions.find().count();
     current_question = existing_entry.current_question;
+
     //TODO: improve Solutions db mgmt
     var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
+    var num_of_workers = entries.length;
+
     var solution_answer = Solutions.findOne().answer1[current_question];
     payments_value = [];
     existing_payments = existing_entry.payments;
@@ -278,6 +281,7 @@ Meteor.methods({
     }
 
     reward = 0;
+    if (num_of_workers>1){
     entries.forEach(function(post){
       if (post.worker_ID != existing_entry.worker_ID){
         if (!post.answer1 || post.answer1[current_question] == -1){
@@ -289,6 +293,15 @@ Meteor.methods({
         }
       }
     });
+    } else {
+      if (!existing_entry.answer1 || existing_entry.answer1[current_question] == -1){
+          reward = 0;
+        } else if (existing_entry.answer1[current_question] == solution_answer){
+          reward = 1;
+        } else {
+          reward = 0.3;
+        }
+    } 
 
     payments_value[current_question] = reward;
     avg_payment_value = (existing_entry.avg_payment*current_question+payments_value[current_question])/(current_question+1);  
@@ -352,7 +365,8 @@ Meteor.methods({
     } else {
       counters[experiment_id_value][current_question]=1;
     }
-    if (counters[experiment_id_value][current_question] >= threshold){
+    var num_of_workers = Answers.find({experiment_id: experiment_id_value}).count();
+    if (counters[experiment_id_value][current_question] >= num_of_workers){
       var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
       entries.forEach(function(post){
         Meteor.call('beginQuestionScheduler', post.worker_ID, true);
