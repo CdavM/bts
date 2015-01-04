@@ -3,7 +3,7 @@ Questions = new Mongo.Collection("questions");
 duration = 10000; //ms
 
 Router.route('/experiment', function(){
-  if (Session.equals('worker_ID_value', -1)){
+  if (Session.equals('worker_ID_value', -1) || ! Session.get('worker_ID_value')){
         //if no worker_ID found redirect back to starting page
     Router.go('/');
     } else {
@@ -11,7 +11,19 @@ Router.route('/experiment', function(){
     }
 });
 
+Router.route('/WID=:wid', function(){
+  var wid = this.params.wid;
+  if (wid == ""){
+    Session.set('worker_ID_value', -1);
+  } else {
+    Session.set('worker_ID_value', wid);
+  }
+  this.render('show_worker_ID');
+});
+
 Router.route('/', function(){
+  Session.set('worker_ID_value', -1);
+  console.log("worker id in session is "+ Session.get('worker_ID_value'));
   this.render('show_worker_ID');
 });
 
@@ -32,7 +44,7 @@ if (Meteor.isClient) {
   Session.set('payment_sum', 0);
   Session.set('experiment_finished', false);
   Session.set('current_question', 0);
-  Session.set('worker_ID_value', -1);
+  //Session.set('worker_ID_value', -1);
   initialized_questions = true;
 
   // disables 'enter' key
@@ -43,6 +55,14 @@ if (Meteor.isClient) {
         return false;
     }
   });
+  
+  Handlebars.registerHelper('worker_id_value',function(){
+    if (Session.equals("worker_ID_value", -1)){
+      return "BLANK";
+    } else {
+      return Session.get('worker_ID_value');
+    }
+  });  
 
   Handlebars.registerHelper('question_background',function(){
     if (Session.equals("answered", true)){
@@ -126,18 +146,19 @@ if (Meteor.isClient) {
   Template.show_worker_ID.events({
     'click #proceed': function(event) {
       data = event.target.form[0].value;
-      if (data && data != ""){
-        Session.set('worker_ID_value', data);
-        //check if the user has participated already
-        curr_exp = Answers.findOne({worker_ID: data});
-        if (curr_exp){
-          alert("Our records indicate that you have already participated in the survey. Thank you!");
-          return;
-        }
-        Router.go('/experiment');
-      } else {
+      if ((!data || data == "") && Session.equals('worker_ID_value', -1)) {
         alert("Please enter your Worker ID");
         return;
+      } else if (data && data != ""){
+        Session.set('worker_ID_value', data);
+      } 
+      //check if the user has participated already
+      curr_exp = Answers.findOne({worker_ID: Session.get('worker_ID_value')});
+      if (curr_exp){
+        alert("Our records indicate that you have already participated in the survey. Thank you!");
+        return;
+      } else {
+        Router.go('/experiment');
       }
     }
   });
