@@ -1,0 +1,31 @@
+<p>We are a research group at <a href="http://www.eecs.berkeley.edu/">UC Berkeley</a>, conducting an academic survey about crowdsourcing. If you&#39;re interested in our work so far, here is a link to our <a href="https://www.eecs.berkeley.edu/~kannanr/about.html"> website</a>. Click on the button below to complete the survey. At the end of the survey, return to this website and sumit the HIT. Note that we use a separate database to log entries, so you do not need to enter a code on this website.</p>
+
+<p><strong>Please make sure to leave this window open as you complete the survey. </strong>When you are finished, you will return to this page and submit the HIT.</p>
+
+<p>Click this link to go to the survey, complete it and return here to submit the HIT:</p>
+
+<div id="myelementLink" style="display: inline; font-family: Verdana;"><tt>URL not shown because there is an error with Javascript on your computer. To perform this HIT, you must have Javascript and cookies enabled on your browser.</tt></div>
+<script type="text/javascript" language="JavaScript"><!--
+var assignment_id_field = document.getElementById('myelementLink');
+var paramstr = window.location.search.substring(1);
+var parampairs = paramstr.split("&");
+var mturkworkerID = "";
+for (i in parampairs) {
+  var pair = parampairs[i].split("=");
+  if (pair[0] == "workerId")
+    mturkworkerID = pair[1];
+}
+if (mturkworkerID == "" ) {
+  assignment_id_field.innerHTML = '<tt>A personalized link will appear once you accept the HIT. <a target="_blank" href="http://btsturk.meteor.com">http://btsturk.meteor.com</a> </tt>';
+} else {
+  assignment_id_field.innerHTML = '<a target="_blank" href="http://btsturk.meteor.com/WID=' + mturkworkerID + '"><p><b>http://btsturk.meteor.com/WID=' + mturkworkerID + '</b></span></span></p></a>';
+}
+// --></script>
+
+<!-- credits for this script go to http://research-tricks.blogspot.com/ -->
+
+<div class="link" id="linkDiv">&nbsp;</div>
+
+<p>If you had any problems on the website or would like to leave us feedback, please let us know below:</p>
+
+<p><input name="feedback" style="width:300px;height:100px;" type="text" />&nbsp;</p>
