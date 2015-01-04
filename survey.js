@@ -2,34 +2,6 @@ Answers = new Mongo.Collection("answers");
 Questions = new Mongo.Collection("questions");
 duration = 10000; //ms
 
-Router.route('/experiment', function(){
-  if (Session.equals('worker_ID_value', -1) || ! Session.get('worker_ID_value')){
-        //if no worker_ID found redirect back to starting page
-    Router.go('/');
-    } else {
-      this.render('experiment');
-    }
-});
-
-Router.route('/WID=:wid', function(){
-  var wid = this.params.wid;
-  if (wid == ""){
-    Session.set('worker_ID_value', -1);
-  } else { 
-    temp_worker_id = wid;
-    //Session.set('worker_ID_value', wid);
-  }
-  this.render('show_worker_ID');
-});
-
-Router.route('/', function(){
-  Session.set('worker_ID_value', -1);
-  this.render('show_worker_ID');
-});
-
-Router.route('/end', function(){
-  this.render('end');
-});
 
 if (Meteor.isClient) {
   // This code only runs on the client
@@ -45,6 +17,36 @@ if (Meteor.isClient) {
   Session.set('current_question', 0);
   //Session.set('worker_ID_value', -1);
   initialized_questions = true;
+
+  Router.route('/experiment', function(){
+  if (Session.equals('worker_ID_value', -1) || ! Session.get('worker_ID_value')){
+        //if no worker_ID found redirect back to starting page
+    Router.go('/');
+    } else {
+      this.render('experiment');
+    }
+  });
+
+  Router.route('/WID=:wid', function(){
+    var wid = this.params.wid;
+    if (wid == ""){
+      Session.set('worker_ID_value', -1);
+    } else { 
+      temp_worker_id = wid;
+      //Session.set('worker_ID_value', wid);
+    }
+    this.render('show_worker_ID');
+  });
+
+  Router.route('/', function(){
+    Session.set('worker_ID_value', -1);
+    this.render('show_worker_ID');
+  });
+
+  Router.route('/end', function(){
+    this.render('end');
+  });
+
 
   // disables 'enter' key
   $(document).on("keypress", 'form', function (e) {
@@ -257,7 +259,7 @@ Meteor.methods({
           experiment_id_counter++;
           var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
           entries.forEach(function(post){
-            console.log(post.worker_ID);
+            //console.log(post.worker_ID);
             Answers.update({worker_ID: post.worker_ID}, {$set:{begin_experiment: true}}, {upsert:true});
             Meteor.call('beginQuestionScheduler', post.worker_ID, false);
           });
@@ -270,7 +272,7 @@ Meteor.methods({
       experiment_id_counter++;
       var entries = Answers.find({experiment_id: experiment_id_value}).fetch();
       entries.forEach(function(post){
-        console.log(post.worker_ID);
+        //console.log(post.worker_ID);
         Answers.update({worker_ID: post.worker_ID}, {$set:{begin_experiment: true}}, {upsert:true});
         Meteor.call('beginQuestionScheduler', post.worker_ID, false);
       });
