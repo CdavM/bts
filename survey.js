@@ -15,15 +15,15 @@ Router.route('/WID=:wid', function(){
   var wid = this.params.wid;
   if (wid == ""){
     Session.set('worker_ID_value', -1);
-  } else {
-    Session.set('worker_ID_value', wid);
+  } else { 
+    temp_worker_id = wid;
+    //Session.set('worker_ID_value', wid);
   }
   this.render('show_worker_ID');
 });
 
 Router.route('/', function(){
   Session.set('worker_ID_value', -1);
-  console.log("worker id in session is "+ Session.get('worker_ID_value'));
   this.render('show_worker_ID');
 });
 
@@ -36,7 +36,6 @@ if (Meteor.isClient) {
   var initial_time_val = new Date().getTime();
   Meteor.subscribe("answers"); 
   Meteor.subscribe("questions"); // get questionbank
-
   Session.set("answered", false);
   Session.set("time_remaining", duration/1000);
   Session.set('duration', duration/1000);
@@ -59,7 +58,9 @@ if (Meteor.isClient) {
   Handlebars.registerHelper('worker_id_value',function(){
     if (Session.equals("worker_ID_value", -1)){
       return "BLANK";
-    } else {
+    } else if (temp_worker_id) {
+      return temp_worker_id;
+    } else { 
       return Session.get('worker_ID_value');
     }
   });  
@@ -119,10 +120,8 @@ if (Meteor.isClient) {
 
   Template.experiment.helpers({
     questions: function() {
-
       worker_ID_value = Session.get('worker_ID_value');
       var curr_experiment = Answers.findOne({worker_ID: worker_ID_value});
-
       if (curr_experiment){
         //update average payment
         current_payment = curr_experiment.avg_payment;
@@ -146,29 +145,28 @@ if (Meteor.isClient) {
   Template.show_worker_ID.events({
     'click #proceed': function(event) {
       data = event.target.form[0].value;
-      if ((!data || data == "") && Session.equals('worker_ID_value', -1)) {
+      if ((!data || data == "") && temp_worker_id == -1) {
         alert("Please enter your Worker ID");
         return;
       } else if (data && data != ""){
-        Session.set('worker_ID_value', data);
-      } 
+        temp_worker_id = data;
+      }
       //check if the user has participated already
-      curr_exp = Answers.findOne({worker_ID: Session.get('worker_ID_value')});
+      curr_exp = Answers.findOne({worker_ID: temp_worker_id});
       if (curr_exp){
         alert("Our records indicate that you have already participated in the survey. Thank you!");
         return;
       } else {
+        Session.set('worker_ID_value', temp_worker_id);
         Router.go('/experiment');
       }
     }
   });
 
   Template.experiment.events({
-
   'click #begin_experiment': function (event) {
     worker_ID_value = Session.get("worker_ID_value");
     Meteor.call('initialPost', {worker_ID: worker_ID_value});
-    
   },
 
   'click .example_submission': function(event){
@@ -184,7 +182,6 @@ if (Meteor.isClient) {
     } else {
       alert("You completed the example correctly. Click the 'Begin' button above to begin the experiment!");
     }
-
   },
 
   'click .answer_submission': function (event) {
