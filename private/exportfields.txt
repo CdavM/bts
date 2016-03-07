@@ -1,0 +1,9 @@
+worker_ID
+asg_ID
+payments
+experiment_id
+current_question
+answer1
+feedback
+initial_time
+begin_time
