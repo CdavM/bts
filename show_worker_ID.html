@@ -1,0 +1,20 @@
+<template name="show_worker_ID">
+<body>
+<div class="container">
+<header>
+<h1>Survey of US State Capitals</h1>
+
+<p>Please verify your Worker ID. The one we have on record for you is <b> {{worker_id_value}} </b>. If you see a blank space or an incorrect ID please enter the correct one in the box below. If you do not enter the correct Worker ID we cannot issue a payment.</p>
+
+<li class="submit_worker_ID">
+  <form action={{WorkerID}}>
+  MTurk Worker ID: <input type="text" name="worker_ID"><br>
+  After making sure that this is your true Worker ID, proceed to the experiment area by clicking this button 
+  <input type="button" value="PROCEED" id="proceed" />
+  </form>
+</li>
+
+</header>
+</div>
+</body>
+</template>

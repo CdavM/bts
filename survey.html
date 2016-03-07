@@ -1,0 +1,240 @@
+<head>
+<title>The Wazoo Grading Experiment!</title>
+</head>
+
+<template name="experiment">
+<body>
+
+
+<header>
+<div class="bg">
+<div id="navigacija" class="jumbotron" style="font-size: 45px">
+The Wazoo Grading Experiment!
+</div>
+</div>
+
+</header>
+
+<div class="jumbotron" style="padding:25px"> 
+{{>instructions}}
+{{#if initialized}}
+{{else}}
+<p class="center"><input type="button" value="BEGIN" name="begin_experiment" id="begin_experiment" class="btn btn-default"/></p>
+{{/if}}
+<ul>
+<div class = "noselect">
+{{#if initialized}}
+
+<div>
+{{#if show_timer}}
+{{#if waiting}} 
+{{else}}
+<p class="center"> Time remaining: {{time_remaining}} seconds</p>
+{{/if}}
+{{/if}}
+
+{{#if show_payment_system}}
+{{>payment_system}}
+{{/if}}
+
+{{#if show_history}}
+<div id="history_table">
+    {{>history_table}}
+</div>
+{{/if}}
+</div>
+
+<div id="exp_start" class="well">
+{{#if waiting}}
+<div class="center"> Loading... </div>
+<div class="progress">
+  <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+    <span class="sr-only">Loading...</span>
+  </div>
+</div>
+{{else}}
+{{#each questions}}
+{{> question}}
+{{/each}}
+{{/if}}
+</div>
+{{/if}}
+
+</div>
+</ul>
+</div>
+</body>
+</template>
+
+
+<template name="question">
+
+{{#with picture}}
+<img src={{this}} class="img-responsive" style="margin:auto;" alt = "Image Missing">
+{{/with}}
+
+<h4>
+
+
+<ul>
+{{#each formula}}
+{{#mathjax}}
+<li>{{this}} </li>
+{{/mathjax}}
+{{#if istable this}}
+<div class="center">
+<table border="1" style="width:350px;height:150px;margin:0 auto;">
+  <tr>
+    <td></td>
+    <td>Lisa gives A</td>
+    <td>Lisa gives B</td>
+  </tr>
+  <tr>
+    <td>Sam gives A</td>
+    <td>{{#mathjax}} <span> $\dfrac{100}{x}$ </span> {{/mathjax}}</td>
+    <td>{{#mathjax}} <span> $0$ </span> {{/mathjax}}</td>
+  </tr>
+  <tr>
+    <td>Sam gives B</td>
+    <td>{{#mathjax}} <span> $0$ </span> {{/mathjax}}</td>
+    <td>{{#mathjax}} <span> $\dfrac{100}{y}$ </span> {{/mathjax}}</td>
+  </tr>
+</table>
+</div>
+{{/if}}
+<br>
+{{/each}}
+</ul>
+
+<p style="color:green"> Sam believes that 20% of the essays will get an A and 80% will get a B if everyone grades honestly. </p>
+<p style="color:red"> Suppose that Sam thinks that his essay deserves {{grade}}, and he thinks that Lisa will also give it {{grade}} with a {{#if isgradea grade}} 40% {{else}} 90% {{/if}} chance. {{#if ismechrf text}} Similarly partners of other graders who give {{grade}} will agree with {{#if isgradea grade}} 40% {{else}} 90% {{/if}} chance. {{/if}} </p>
+<br>
+<div class="center">
+<b><p>Assuming that every other grader is going to grade honestly, what grade should Sam report to <u> maximize his reward</u>?</p></b>
+ <br>
+</div>
+</h4>
+{{>Template.dynamic template=current_answer}}
+<p style="margin-bottom:100px;"></p>
+</template>
+
+<template name="answer1">
+<div class="center">
+<h3>
+<form name = "TF_report">
+<label class="label label-primary">A<input type="radio" name="radio" value = "A" /></label>
+<label class="label label-success">B<input type="radio" name="radio" value = "B" /></label>
+</form>
+</h3>
+<h4>
+<br>
+You will get a 30 cent bonus if you answer correctly and give a reasonable explanation. <br>
+Please explain your answer: <br>
+</h4> 
+<form name="text_explanation">
+<textarea rows="8" cols="75"> </textarea> <br>
+</form>
+<input type="button" value="SUBMIT" id="answer_submission" class="btn btn-default">
+</div>
+</template>
+
+<template name="answer2">
+<div class="center">
+<p>Here's an example of a multiple choice answer form.</p>
+<h4>
+<form name = "deck_estimate">
+<label class="label label-primary">0-10<input type="radio" value = "0-10" /></label>
+<label class="label label-primary">11-20<input type="radio" value = "11-20" /></label>
+<label class="label label-primary">21-30<input type="radio" value = "21-30" /></label>
+<label class="label label-primary">31-40<input type="radio" value = "31-40" /></label>
+<label class="label label-primary">41-50<input type="radio" value = "41-50" /></label>
+<label class="label label-primary">51-60<input type="radio" value = "51-60" /></label>
+<label class="label label-primary">61-70<input type="radio" value = "61-70" /></label>
+<label class="label label-primary">71-80<input type="radio" value = "71-80" /></label>
+<label class="label label-primary">81-90<input type="radio" value = "81-90" /></label>
+<label class="label label-primary">91-100<input type="radio" value = "91-100" /></label>
+</form>
+</h4>
+
+<p> Here's an example of a textarea answer form. </p>
+<form name="text_explanation">
+<textarea rows="4" cols="30"> </textarea> <br>
+</form>
+Note that the submit button is not wrapped in a "form" object - we do not need to store its value.
+<input type="button" value="SUBMIT" id="answer_submission" class="btn btn-primary">
+</div>
+
+</template>
+
+
+
+<template name="instructions">
+
+<h4>
+<img src="school-sm.png" class="img-responsive" style="width:250px;height:auto;float:left;">
+<br> <br><p> The principal of Wazoo High school is having the 12th grade students (seniors) grade history essays of the 9th grade students (freshmen). </p>
+<div style="clear:left;">
+</div>
+<img src="wstep1.png" class="img-responsive" style="width:250px;height:auto; float:left;"> 
+<br> <br> <br><p> Each essay will be graded separately by two seniors. There are only two grades, A and B.
+  </p>
+
+<p>
+ The principal has come up with a scheme to reward the seniors so that they grade well.
+ </p>
+<div style="clear:left"> </div>
+<img src="sam3.png" class="img-responsive" style="width:50px;height:auto; float:left; margin-left:120px;margin-right:80px;"> 
+<br>
+ <p>
+In this task, you need to help grader Sam maximize his reward. </p> 
+<p>After you click 'begin' you will see the reward scheme. </p>
+<div style="clear:both;">
+</div>
+</h4>
+
+</template>
+
+
+<template name="payment_system">
+<p class="center"> Your total payment so far: {{current_payment}} USD</p>
+</template>
+
+<template name="history_table">
+
+<table class="table table-bordered">
+  <thead>
+  <tr>
+    <td> When </td>
+    <td> Answer </td>
+    <td> Percentage </td>
+    <td> Payment </td>
+  </tr>
+  </thead>
+  <tbody>
+  {{#each history_data}}
+      <tr> 
+        <td> {{Title}} </td>
+        
+        <td> {{Answer}} </td>
+        
+        <td> {{Percentage}} </td>
+        
+        <td> {{Payment}} </td>
+      </tr>
+  {{/each}}
+  </tbody>
+</table>
+
+</template>
+
+
+<template name="more_instructions">
+<body>
+<div class="container">
+<header>
+More instructions
+</header>
+<p class="padded">Here are some more instructions. Navigate to the previous tab to continue with the experiment.</p>
+</div>
+</body>
+</template>

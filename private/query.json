@@ -1,0 +1,2 @@
+{$where: "this.worker_ID.length > 10",
+ initial_time: {$gte: 1423360794230}}

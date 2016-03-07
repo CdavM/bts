@@ -1,0 +1,37 @@
+<template name="end">
+<body>
+<div class="container">
+<header>
+{{#if experiment_finished}}
+You have finished the experiment. Please return to MTurk and submit the HIT. Thank you for your help!
+
+{{#if show_payment_system}}
+{{>show_final_payment}}
+{{/if}}
+
+<!-- If you have any thoughts on the experiment, layout or anything else, please leave us feedback in the form below:
+<div id="feedback_complete">
+<div class="center">
+<form name="feedback">
+<textarea rows="4" cols="30" class="feedback_form"> </textarea>
+</form>
+<input type="button" value="Submit Feedback" id="feedback_submission" class="btn btn-primary">
+</div>
+</div> -->
+{{else}}
+You have already participated in the experiment. Please return to MTurk and return the HIT. Thank you for your help!
+{{/if}}
+
+</header>
+
+
+
+</div>
+</body>
+</template>
+
+<template name="show_final_payment">
+<p class = "center">
+Your total bonus is {{current_payment}} USD!
+</p>
+</template>

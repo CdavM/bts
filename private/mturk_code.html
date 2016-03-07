@@ -1,0 +1,49 @@
+<script src="//uniqueturker.myleott.com/lib.js" type="text/javascript"></script><script type="text/javascript">
+(function(){
+    var ut_id = "5680b6c9296c9c7d5d5aff9e8144d041";
+    if (UTWorkerLimitReached(ut_id)) {
+        document.getElementById('mturk_form').style.display = 'none';
+        document.getElementsByTagName('body')[0].innerHTML = "You have already completed the maximum number of HITs allowed by this requester. Please click 'Return HIT' to avoid any impact on your approval rating.";
+    }
+})();
+</script>
+<div style="float:left;">
+<p>In this task, you need to help Sam grade an essay to maximize his reward.</p>
+<img src="http://classroomclipart.com/images/gallery/Clipart/School/TN_boy-with-book-bag-and-book.jpg"/>
+<p>You will answer one multiple choice question and explain your reasoning. If your answer is correct and you offer a reasonable explanation, you will receive up to <strong>50 cents in bonus</strong>.</p>
+
+<p><strong>Please make sure to leave this window open as you complete the survey. </strong>When you are finished, you will return to this page and submit the HIT.</p>
+
+<div id="myelementLink" style="display: inline; font-family: Verdana;"><tt>URL not shown because there is an error with Javascript on your computer. To perform this HIT, you must have Javascript and cookies enabled on your browser.</tt></div>
+<script type="text/javascript" language="JavaScript"><!--
+var assignment_id_field = document.getElementById('myelementLink');
+var paramstr = window.location.search.substring(1);
+var parampairs = paramstr.split("&");
+var mturkworkerID = "";
+var assignID = "";
+for (i in parampairs) {
+  var pair = parampairs[i].split("=");
+  if (pair[0] == "workerId"){
+    mturkworkerID = pair[1];
+  } else if (pair[0] == "assignmentId"){
+    assignID = pair[1];
+  }
+}
+if (mturkworkerID == "" ) {
+  assignment_id_field.innerHTML = '<tt>A personalized link will appear once you accept the HIT. <a target="_blank" href="http://purple.meteor.com">http://purple.meteor.com</a> </tt>';
+} else {
+  assignment_id_field.innerHTML = '<a target="_blank" href="http://purple.meteor.com/WID=' + mturkworkerID + '&ASG=' + assignID +'"><p><b>http://purple.meteor.com/WID=' + mturkworkerID + '&ASG=' + assignID + '</b></span></span></p></a>';
+}
+// --></script><!-- credits for this script go to http://research-tricks.blogspot.com/ --></div>
+
+<div class="link" id="linkDiv">&nbsp;</div>
+
+<p>&nbsp;</p>
+
+<div style="clear:both;">
+<p>If you had any problems on the website or would like to leave us additional feedback, please let us know below:</p>
+
+<p><input name="feedback" style="width:300px;height:100px;" type="text" />&nbsp;</p>
+</div>
+
+<p>&nbsp;</p>
