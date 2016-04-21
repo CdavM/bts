@@ -1,5 +1,5 @@
 <head>
-<title>The Wazoo Confusion Experiment!</title>
+<title>The Wazoo Grading Experiment!</title>
 </head>
 
 <template name="experiment">
@@ -9,7 +9,7 @@
 <header>
 <div class="bg">
 <div id="navigacija" class="jumbotron" style="font-size: 45px">
-The Wazoo Confusion Experiment!
+The Wazoo Grading Experiment!
 </div>
 </div>
 
@@ -69,15 +69,48 @@ The Wazoo Confusion Experiment!
 
 <template name="question">
 
+{{#with picture}}
+<img src={{this}} class="img-responsive" style="margin:auto;" alt = "Image Missing">
+{{/with}}
+
 <h4>
-The first comment is:
+
+
+<ul>
+{{#each formula}}
+{{#mathjax}}
+<li>{{this}} </li>
+{{/mathjax}}
+{{#if istable this}}
+<div class="center">
+<table border="1" style="width:350px;height:150px;margin:0 auto;">
+  <tr>
+    <td></td>
+    <td>Lisa gives A</td>
+    <td>Lisa gives B</td>
+  </tr>
+  <tr>
+    <td>Sam gives A</td>
+    <td>{{#mathjax}} <span> $\dfrac{100}{x}$ </span> {{/mathjax}}</td>
+    <td>{{#mathjax}} <span> $0$ </span> {{/mathjax}}</td>
+  </tr>
+  <tr>
+    <td>Sam gives B</td>
+    <td>{{#mathjax}} <span> $0$ </span> {{/mathjax}}</td>
+    <td>{{#mathjax}} <span> $\dfrac{100}{y}$ </span> {{/mathjax}}</td>
+  </tr>
+</table>
+</div>
+{{/if}}
 <br>
-<p style="color:blue">  {{comment1 index1}}  </p>
-<br> The second comment is: <br>
-<p style="color:green"> {{comment2 index2}} </p>
+{{/each}}
+</ul>
+
+<p style="color:green"> Sam believes that 20% of the essays will get an A and 80% will get a B if everyone grades honestly. </p>
+<p style="color:red"> Suppose that Sam thinks that his essay deserves {{grade}}, and he thinks that Lisa will also give it {{grade}} with a {{#if isgradea grade}} 40% {{else}} 90% {{/if}} chance. {{#if ismechrf text}} Similarly partners of other graders who give {{grade}} will agree with {{#if isgradea grade}} 40% {{else}} 90% {{/if}} chance. {{/if}} </p>
 <br>
 <div class="center">
-<b><p>Which comment is more confusing?</p></b>
+<b><p>Assuming that every other grader is going to grade honestly, what grade should Sam report to <u> maximize his reward</u>?</p></b>
  <br>
 </div>
 </h4>
@@ -89,10 +122,18 @@ The first comment is:
 <div class="center">
 <h3>
 <form name = "TF_report">
-<label class="label label-primary">The first comment<input type="radio" name="radio" value = "A" /></label>
-<label class="label label-success">The second comment<input type="radio" name="radio" value = "B" /></label>
+<label class="label label-primary">A<input type="radio" name="radio" value = "A" /></label>
+<label class="label label-success">B<input type="radio" name="radio" value = "B" /></label>
 </form>
 </h3>
+<h4>
+<br>
+You will get a 30 cent bonus if you answer correctly and give a reasonable explanation. <br>
+Please explain your answer: <br>
+</h4> 
+<form name="text_explanation">
+<textarea rows="8" cols="75"> </textarea> <br>
+</form>
 <input type="button" value="SUBMIT" id="answer_submission" class="btn btn-default">
 </div>
 </template>
@@ -131,9 +172,22 @@ Note that the submit button is not wrapped in a "form" object - we do not need t
 
 <h4>
 <img src="school-sm.png" class="img-responsive" style="width:250px;height:auto;float:left;">
-<br><p> In this task, you will read two comments and pick the one that is <b>more</b> confusing. </p>
- 
-<p>After you click 'begin' you will see the two comments. </p>
+<br> <br><p> The principal of Wazoo High school is having the 12th grade students (seniors) grade history essays of the 9th grade students (freshmen). </p>
+<div style="clear:left;">
+</div>
+<img src="wstep1.png" class="img-responsive" style="width:250px;height:auto; float:left;"> 
+<br> <br> <br><p> Each essay will be graded separately by two seniors. There are only two grades, A and B.
+  </p>
+
+<p>
+ The principal has come up with a scheme to reward the seniors so that they grade well.
+ </p>
+<div style="clear:left"> </div>
+<img src="sam3.png" class="img-responsive" style="width:50px;height:auto; float:left; margin-left:120px;margin-right:80px;"> 
+<br>
+ <p>
+In this task, you need to help grader Sam maximize his reward. </p> 
+<p>After you click 'begin' you will see the reward scheme. </p>
 <div style="clear:both;">
 </div>
 </h4>
