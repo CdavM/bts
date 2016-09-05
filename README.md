@@ -34,8 +34,8 @@ It is possible to deploy the platform via Amazon AWS. Once you provision a Ubunt
 ## Examples
 
 Multiple experiments have been deployed with this platform:
-⋅⋅* Iterative decision making under various utility models [Stanford University]: https://github.com/cdavm/harp
-⋅⋅* Estimating apriori probabilities (Is the Bayes rule intuitive?) [UC Berkeley]
+* Iterative decision making under various utility models [Stanford University]: https://github.com/cdavm/harp
+* Estimating apriori probabilities (Is the Bayes rule intuitive?) [UC Berkeley]
 
 ## Contact
 Feel free to open pull requests or issues on GitHub should you notice any bugs.
